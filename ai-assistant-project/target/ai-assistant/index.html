@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AI Assistant - Full Stack</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.bot .message-bubble {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .bot-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .user-icon {
+            background: #e0e0e0;
+        }
+
+        .loading {
+            display: inline-block;
+            padding: 10px;
+        }
+
+        .loading:after {
+            content: '⋯';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '⋯'; }
+            40% { content: '⋯.'; }
+            60% { content: '⋯..'; }
+            80%, 100% { content: '⋯...'; }
+        }
+
+        .input-container {
+            padding: 20px;
+            background: #f8f8f8;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .input-container input:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #45a049;
+        }
+
+        .btn-search {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-search:hover {
+            background: #0b7dda;
+        }
+
+        .quick-commands {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 15px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .quick-command {
+            background: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            border: 1px solid #e0e0e0;
+        }
+
+        .quick-command:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .search-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #4CAF50;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(26px);
+        }
+
+        .knowledge-list, .reminder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .knowledge-item, .reminder-item {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .knowledge-item strong {
+            color: #667eea;
+        }
+
+        .btn-delete {
+            background: #ff4757;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-delete:hover {
+            background: #ff3838;
+        }
+
+        .form-section {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: #667eea;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .alert-box {
+            padding: 15px;
+            margin: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-box.info {
+            background: #d1ecf1;
+            border: 1px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        .alert-box.success {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            color: #155724;
+        }
+
+        .alert-box.error {
+            background: #f8d7da;
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+
+        .source-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .source-local {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .source-web {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: none;
+            animation: slideInRight 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: #ff4757;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🤖 Smart AI Assistant</h1>
+                <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
+                    <span class="badge">🌐 Web Search</span>
+                    <span class="badge">💾 Database</span>
+                    <div class="connection-status">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="connectionStatus">Connected</span>
+                    </div>
+                </div>
+            </div>
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('chat')">Chat</button>
+                <button class="tab" onclick="switchTab('knowledge')">Knowledge</button>
+                <button class="tab" onclick="switchTab('reminders')">Reminders</button>
+                <button class="tab" onclick="switchTab('stats')">Stats</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Chat Tab -->
+            <div id="chat-tab" class="tab-content active">
+                <div class="quick-commands">
+                    <div class="quick-command" onclick="quickCommand('What time is it?')">⏰ Time</div>
+                    <div class="quick-command" onclick="quickCommand('What\'s the date?')">📅 Date</div>
+                    <div class="quick-command" onclick="quickCommand('What is artificial intelligence?')">🔍 Search AI</div>
+                    <div class="quick-command" onclick="quickCommand('help')">❓ Help</div>
+                    <div class="search-toggle">
+                        <span>Web Search:</span>
+                        <div class="toggle-switch active" id="webSearchToggle" onclick="toggleWebSearch()">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-container" id="chatContainer">
+                    <div class="message bot">
+                        <div class="message-icon bot-icon">🤖</div>
+                        <div class="message-bubble">
+                            Hello! I'm your Smart AI Assistant with <strong>Real Web Search</strong> capabilities! 🌐<br><br>
+                            <strong>How to use:</strong><br>
+                            • Ask me anything - I'll search Wikipedia & DuckDuckGo if needed<br>
+                            • Teach me: "learn [topic] is [information]"<br>
+                            • Web Search is <strong>ON</strong> by default (toggle in bar above)<br>
+                            • Click "🔍 Search Web" button to force web search<br>
+                            • All web results are cached for faster future access<br><br>
+                            <strong>Try asking:</strong><br>
+                            • "What is quantum computing?"<br>
+                            • "Who is Albert Einstein?"<br>
+                            • "What are black holes?"
+                        </div>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="userInput" placeholder="Ask me anything..." onkeypress="handleEnter(event)">
+                    <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">Send</button>
+                    <button class="btn btn-search" onclick="forceWebSearch()">🔍 Search Web</button>
+                </div>
+            </div>
+
+            <!-- Knowledge Tab -->
+            <div id="knowledge-tab" class="tab-content">
+                <div class="form-section">
+                    <h2 style="margin-bottom: 20px;">Knowledge Base (Database)</h2>
+                    <div class="form-group">
+                        <label>Topic</label>
+                        <input type="text" id="knowledgeTopic" placeholder="e.g., Java Programming">
+                    </div>
+                    <div class="form-group">
+                        <label>Information</label>
+                        <textarea id="knowledgeInfo" rows="3" placeholder="e.g., A high-level programming language..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="addKnowledge()">💾 Save to Database</button>
+                </div>
+                <hr style="margin: 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="knowledge-list" id="knowledgeList">
+                    <div class="loading">Loading knowledge from database...</div>
+                </div>
+            </div>
+
+            <!-- Reminders Tab -->
+            <div id="reminders-tab" class="tab-content">
+                <div class="form-section">
+                    <h2 style="margin-bottom: 20px;">Reminders (Database)</h2>
+                    <div class="form-group">
+                        <label>Reminder Message</label>
+                        <input type="text" id="reminderMessage" placeholder="e.g., Call the dentist">
+                    </div>
+                    <div class="form-group">
+                        <label>Date & Time</label>
+                        <input type="datetime-local" id="reminderTime">
+                    </div>
+                    <button class="btn btn-primary" onclick="addReminder()">⏰ Save Reminder</button>
+                </div>
+                <hr style="margin: 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="reminder-list" id="reminderList">
+                    <div class="loading">Loading reminders from database...</div>
+                </div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="stats-tab" class="tab-content">
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3 id="knowledgeCount">-</h3>
+                        <p>Knowledge Items</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="reminderCount">-</h3>
+                        <p>Active Reminders</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="messageCount">0</h3>
+                        <p>Messages Sent</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="webSearchCount">0</h3>
+                        <p>Web Searches</p>
+                    </div>
+                </div>
+                <div style="background: #f8f8f8; padding: 20px; margin: 20px; border-radius: 10px;">
+                    <h3 style="margin-bottom: 15px;">System Information</h3>
+                    <p><strong>Backend API:</strong> <span id="apiStatus">Checking...</span></p>
+                    <p><strong>Database:</strong> <span id="dbStatus">MySQL</span></p>
+                    <p><strong>Web Search:</strong> <span id="searchEngine">DuckDuckGo + Wikipedia</span></p>
+                    <p><strong>Current Date:</strong> <span id="currentDate"></span></p>
+                    <p><strong>Current Time:</strong> <span id="currentTime"></span></p>
+                    <p><strong>Session Started:</strong> <span id="sessionStart"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Configuration
+        const API_URL = '/ai-assistant/api/assistant'; // Change to your servlet URL
+        const sessionStart = new Date().toLocaleString();
+        
+        // State
+        let webSearchEnabled = true;
+        let messageCount = 0;
+        let webSearchCount = 0;
+        let isProcessing = false;
+
+        // Initialize
+        window.onload = function() {
+            loadKnowledge();
+            loadReminders();
+            updateStats();
+            checkAPIConnection();
+            setInterval(updateTime, 1000);
+            setInterval(checkReminders, 30000);
+            updateTime();
+            document.getElementById('sessionStart').textContent = sessionStart;
+        };
+
+        // API Connection Check
+        async function checkAPIConnection() {
+            try {
+                const response = await fetch(`${API_URL}?action=getKnowledge`);
+                if (response.ok) {
+                    updateConnectionStatus(true);
+                    document.getElementById('apiStatus').textContent = 'Connected ✅';
+                } else {
+                    updateConnectionStatus(false);
+                    document.getElementById('apiStatus').textContent = 'Error ❌';
+                }
+            } catch (error) {
+                updateConnectionStatus(false);
+                document.getElementById('apiStatus').textContent = 'Disconnected ❌';
+                showToast('Cannot connect to backend server. Using demo mode.', 'error');
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const dot = document.getElementById('statusDot');
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                dot.classList.remove('disconnected');
+                status.textContent = 'Connected';
+            } else {
+                dot.classList.add('disconnected');
+                status.textContent = 'Disconnected';
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            if (tabName === 'knowledge') loadKnowledge();
+            if (tabName === 'reminders') loadReminders();
+            if (tabName === 'stats') updateStats();
+        }
+
+        // Web Search Toggle
+        function toggleWebSearch() {
+            const toggle = document.getElementById('webSearchToggle');
+            webSearchEnabled = !webSearchEnabled;
+            if (webSearchEnabled) {
+                toggle.classList.add('active');
+                showToast('Web search enabled 🌐', 'success');
+            } else {
+                toggle.classList.remove('active');
+                showToast('Web search disabled 📚', 'info');
+            }
+        }
+
+        // Chat Functions
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || isProcessing) return;
+            
+            addChatMessage(message, 'user');
+            input.value = '';
+            messageCount++;
+            
+            processCommand(message);
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter' && !isProcessing) sendMessage();
+        }
+
+        function quickCommand(command) {
+            document.getElementById('userInput').value = command;
+            sendMessage();
+        }
+
+        function forceWebSearch() {
+            const input = document.getElementById('userInput').value.trim();
+            if (!input) {
+                showToast('Please enter a search query', 'error');
+                return;
+            }
+            
+            addChatMessage(input, 'user');
+            messageCount++;
+            
+            // Force web search regardless of toggle
+            searchWeb(input, true);
+            document.getElementById('userInput').value = '';
+        }
+
+        function addChatMessage(message, sender, source = null) {
+            const container = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            let sourceBadge = '';
+            if (source) {
+                const badgeClass = source === 'local' ? 'source-local' : 'source-web';
+                const badgeText = source === 'local' ? '📚 From Database' : '🌐 From Web';
+                sourceBadge = `<div class="source-badge ${badgeClass}">${badgeText}</div>`;
+            }
+            
+            if (sender === 'bot') {
+                messageDiv.innerHTML = `
+                    <div class="message-icon bot-icon">🤖</div>
+                    <div class="message-bubble">${message}${sourceBadge}</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">${message}</div>
+                    <div class="message-icon user-icon">👤</div>
+                `;
+            }
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addLoadingMessage() {
+            const container = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.id = 'loadingMessage';
+            messageDiv.innerHTML = `
+                <div class="message-icon bot-icon">🤖</div>
+                <div class="message-bubble"><span class="loading">Thinking</span></div>
+            `;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loading = document.getElementById('loadingMessage');
+            if (loading) loading.remove();
+        }
+
+        // Command Processing
+        async function processCommand(input) {
+            const lower = input.toLowerCase();
+            
+            isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+            
+            try {
+                if (lower.includes('learn') && lower.includes(' is ')) {
+                    await handleLearn(input);
+                } else if (lower.startsWith('ask ')) {
+                    await handleAsk(input.substring(4));
+                } else if (lower.includes('what time')) {
+                    handleTime();
+                } else if (lower.includes('what') && lower.includes('date')) {
+                    handleDate();
+                } else if (lower === 'help') {
+                    showHelp();
+                } else {
+                    await queryAssistant(input);
+                }
+            } finally {
+                isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+
+        async function handleLearn(input) {
+            const match = input.match(/learn\s+(.+?)\s+is\s+(.+)/i);
+            if (match) {
+                const topic = match[1].trim();
+                const info = match[2].trim();
+                
+                addLoadingMessage();
+                const success = await addKnowledgeToDatabase(topic, info);
+                removeLoadingMessage();
+                
+                if (success) {
+                    addChatMessage(`I've learned that ${topic} is ${info} and saved it to the database! 💾`, 'bot');
+                    loadKnowledge();
+                } else {
+                    addChatMessage('Sorry, I couldn\'t save that to the database. Please try again.', 'bot');
+                }
+            } else {
+                addChatMessage('Please use format: learn [topic] is [information]', 'bot');
+            }
+        }
+
+        async function handleAsk(query) {
+            await queryAssistant(query);
+        }
+
+        async function queryAssistant(query) {
+            addLoadingMessage();
+            
+            // First check local search cache
+            const cachedResult = checkLocalSearchCache(query);
+            if (cachedResult) {
+                removeLoadingMessage();
+                addChatMessage(cachedResult + '\n\n<small>💾 From cached search</small>', 'bot', 'local');
+                return;
+            }
+            
+            try {
+                // Try to query backend API if available
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'queryAssistant', query: query })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    removeLoadingMessage();
+                    
+                    if (data.success && data.response) {
+                        const source = data.response.includes('web') ? 'web' : 'local';
+                        addChatMessage(data.response, 'bot', source);
+                        return;
+                    }
+                }
+            } catch (error) {
+                // Backend not available, continue with local search
+                console.log('Backend not available, using local search');
+            }
+            
+            // Check browser storage (localStorage knowledge)
+            const localKnowledge = JSON.parse(localStorage.getItem('knowledgeBase')) || {};
+            const lowerQuery = query.toLowerCase();
+            
+            // Direct match
+            if (localKnowledge[lowerQuery]) {
+                removeLoadingMessage();
+                addChatMessage(localKnowledge[lowerQuery], 'bot', 'local');
+                return;
+            }
+            
+            // Fuzzy search in local knowledge
+            for (let topic in localKnowledge) {
+                if (lowerQuery.includes(topic) || topic.includes(lowerQuery)) {
+                    removeLoadingMessage();
+                    addChatMessage(localKnowledge[topic], 'bot', 'local');
+                    return;
+                }
+            }
+            
+            // If web search is enabled and no local result found
+            if (webSearchEnabled) {
+                await searchWeb(query);
+            } else {
+                removeLoadingMessage();
+                addChatMessage(`I don't have information about "${query}" in my knowledge base. Enable web search or teach me about it using: learn [topic] is [information]`, 'bot');
+            }
+        }
+
+        async function searchWeb(query, forced = false) {
+            if (!forced && !webSearchEnabled) {
+                addChatMessage('Web search is disabled. Enable it to search the internet.', 'bot');
+                return;
+            }
+            
+            addLoadingMessage();
+            webSearchCount++;
+            
+            try {
+                // Try Wikipedia API first (most reliable for general knowledge)
+                const wikiResult = await searchWikipedia(query);
+                removeLoadingMessage();
+                
+                if (wikiResult) {
+                    addChatMessage(wikiResult, 'bot', 'web');
+                    // Save to local storage for future use
+                    saveToLocalKnowledge(query, wikiResult);
+                    return;
+                }
+                
+                // Fallback to DuckDuckGo
+                const duckResult = await searchDuckDuckGo(query);
+                removeLoadingMessage();
+                
+                if (duckResult) {
+                    addChatMessage(duckResult, 'bot', 'web');
+                    saveToLocalKnowledge(query, duckResult);
+                } else {
+                    addChatMessage(`I searched the web but couldn't find specific information about "${query}". Try rephrasing your question or being more specific.`, 'bot');
+                }
+            } catch (error) {
+                removeLoadingMessage();
+                console.error('Search error:', error);
+                addChatMessage('Web search is currently unavailable. I can still answer from my knowledge base!', 'bot');
+            }
+        }
+
+        async function searchWikipedia(query) {
+            try {
+                // Wikipedia REST API - most reliable
+                const cleanQuery = encodeURIComponent(query.trim().replace(/what is |what are |who is |who are /gi, ''));
+                const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${cleanQuery}`;
+                
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.extract && data.extract.length > 50) {
+                        let result = data.extract;
+                        
+                        // Add source attribution
+                        if (data.content_urls && data.content_urls.desktop) {
+                            result += `\n\n<small>Source: <a href="${data.content_urls.desktop.page}" target="_blank">Wikipedia</a></small>`;
+                        }
+                        
+                        return result;
+                    }
+                }
+            } catch (error) {
+                console.log('Wikipedia search failed:', error);
+            }
+            return null;
+        }
+
+        async function searchDuckDuckGo(query) {
+            try {
+                // DuckDuckGo Instant Answer API
+                const cleanQuery = encodeURIComponent(query.trim());
+                const url = `https://api.duckduckgo.com/?q=${cleanQuery}&format=json&no_html=1&skip_disambig=1`;
+                
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Check for instant answer
+                    if (data.AbstractText && data.AbstractText.length > 50) {
+                        let result = data.AbstractText;
+                        if (data.AbstractURL) {
+                            result += `\n\n<small>Source: <a href="${data.AbstractURL}" target="_blank">DuckDuckGo</a></small>`;
+                        }
+                        return result;
+                    }
+                    
+                    // Check for definition
+                    if (data.Definition && data.Definition.length > 20) {
+                        return data.Definition;
+                    }
+                    
+                    // Check for related topics
+                    if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+                        const firstTopic = data.RelatedTopics[0];
+                        if (firstTopic.Text && firstTopic.Text.length > 50) {
+                            return firstTopic.Text;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('DuckDuckGo search failed:', error);
+            }
+            return null;
+        }
+
+        function saveToLocalKnowledge(query, answer) {
+            // Save web search results to browser storage for future use
+            try {
+                const key = query.toLowerCase().trim();
+                const stored = JSON.parse(localStorage.getItem('webSearchCache')) || {};
+                stored[key] = {
+                    answer: answer,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('webSearchCache', JSON.stringify(stored));
+            } catch (error) {
+                console.log('Failed to cache search result:', error);
+            }
+        }
+
+        function checkLocalSearchCache(query) {
+            try {
+                const stored = JSON.parse(localStorage.getItem('webSearchCache')) || {};
+                const key = query.toLowerCase().trim();
+                
+                if (stored[key]) {
+                    const ageInDays = (Date.now() - stored[key].timestamp) / (1000 * 60 * 60 * 24);
+                    // Use cached result if less than 7 days old
+                    if (ageInDays < 7) {
+                        return stored[key].answer;
+                    }
+                }
+            } catch (error) {
+                console.log('Failed to check cache:', error);
+            }
+            return null;
+        }
+
+        function handleTime() {
+            const now = new Date();
+            addChatMessage(`Current time is ${now.toLocaleTimeString()}`, 'bot');
+        }
+
+        function handleDate() {
+            const now = new Date();
+            addChatMessage(`Today's date is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, 'bot');
+        }
+
+        function showHelp() {
+            const helpText = `
+                <strong>Commands & Features:</strong><br><br>
+                <strong>💬 Chat:</strong><br>
+                • Ask any question - I'll search my database or the web<br>
+                • learn [topic] is [information] - Teach me something<br>
+                • Toggle web search on/off as needed<br><br>
+                <strong>💾 Database:</strong><br>
+                • All knowledge is stored in MySQL database<br>
+                • Persistent across sessions<br>
+                • Fast local search before web search<br><br>
+                <strong>🌐 Web Search:</strong><br>
+                • Automatic internet search if I don't know<br>
+                • Uses DuckDuckGo and Wikipedia<br>
+                • Results are cached in database<br><br>
+                <strong>⏰ Reminders:</strong><br>
+                • Set reminders in the Reminders tab<br>
+                • Stored in database<br>
+                • Browser notifications when due
+            `;
+            addChatMessage(helpText, 'bot');
+        }
+
+        // Knowledge Management
+        async function addKnowledge() {
+            const topic = document.getElementById('knowledgeTopic').value.trim();
+            const info = document.getElementById('knowledgeInfo').value.trim();
+            
+            if (!topic || !info) {
+                showToast('Please fill in both fields', 'error');
+                return;
+            }
+            
+            const success = await addKnowledgeToDatabase(topic, info);
+            
+            if (success) {
+                document.getElementById('knowledgeTopic').value = '';
+                document.getElementById('knowledgeInfo').value = '';
+                loadKnowledge();
+                showToast('Knowledge added to database! 💾', 'success');
+            } else {
+                showToast('Failed to add knowledge', 'error');
+            }
+        }
+
+        async function addKnowledgeToDatabase(topic, information) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'addKnowledge',
+                        topic: topic,
+                        information: information
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.success;
+                }
+            } catch (error) {
+                console.error('Error adding knowledge:', error);
+            }
+            return false;
+        }
+
+        async function loadKnowledge() {
+            const list = document.getElementById('knowledgeList');
+            list.innerHTML = '<div class="loading">Loading knowledge...</div>';
+            
+            try {
+                // Try to load from backend API first
+                const response = await fetch(`${API_URL}?action=getKnowledge`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    list.innerHTML = '';
+                    
+                    if (data.success && data.data.length > 0) {
+                        data.data.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'knowledge-item';
+                            div.innerHTML = `
+                                <div>
+                                    <strong>${item.topic}:</strong> ${item.information}
+                                    <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                                        Added: ${new Date(item.timestamp).toLocaleString()} | Source: Database
+                                    </div>
+                                </div>
+                                <button class="btn-delete" onclick="deleteKnowledge(${item.id})">Delete</button>
+                            `;
+                            list.appendChild(div);
+                        });
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('Backend not available, loading from browser storage');
+            }
+            
+            // Fallback to browser storage (localStorage)
+            const localKnowledge = JSON.parse(localStorage.getItem('knowledgeBase')) || {};
+            const webCache = JSON.parse(localStorage.getItem('webSearchCache')) || {};
+            
+            list.innerHTML = '';
+            
+            let hasData = false;
+            
+            // Display local knowledge
+            for (let topic in localKnowledge) {
+                hasData = true;
+                const div = document.createElement('div');
+                div.className = 'knowledge-item';
+                div.innerHTML = `
+                    <div>
+                        <strong>${topic}:</strong> ${localKnowledge[topic]}
+                        <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                            Source: Browser Storage
+                        </div>
+                    </div>
+                    <button class="btn-delete" onclick="deleteLocalKnowledge('${topic}')">Delete</button>
+                `;
+                list.appendChild(div);
+            }
+            
+            // Display cached web searches
+            for (let query in webCache) {
+                hasData = true;
+                const div = document.createElement('div');
+                div.className = 'knowledge-item';
+                div.innerHTML = `
+                    <div>
+                        <strong>${query}:</strong> ${webCache[query].answer.substring(0, 200)}...
+                        <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                            Cached: ${new Date(webCache[query].timestamp).toLocaleString()} | Source: Web Search
+                        </div>
+                    </div>
+                    <button class="btn-delete" onclick="deleteCachedSearch('${query}')">Delete</button>
+                `;
+                list.appendChild(div);
+            }
+            
+            if (!hasData) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">📚</div><p>No knowledge stored yet</p></div>';
+            }
+        }
+
+        function deleteLocalKnowledge(topic) {
+            if (!confirm('Delete this knowledge item?')) return;
+            
+            const localKnowledge = JSON.parse(localStorage.getItem('knowledgeBase')) || {};
+            delete localKnowledge[topic];
+            localStorage.setItem('knowledgeBase', JSON.stringify(localKnowledge));
+            
+            loadKnowledge();
+            showToast('Knowledge deleted', 'success');
+        }
+
+        function deleteCachedSearch(query) {
+            if (!confirm('Delete this cached search?')) return;
+            
+            const webCache = JSON.parse(localStorage.getItem('webSearchCache')) || {};
+            delete webCache[query];
+            localStorage.setItem('webSearchCache', JSON.stringify(webCache));
+            
+            loadKnowledge();
+            showToast('Cached search deleted', 'success');
+        }
+
+        async function deleteKnowledge(id) {
+            if (!confirm('Delete this knowledge item?')) return;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'deleteKnowledge', id: id })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        loadKnowledge();
+                        showToast('Knowledge deleted', 'success');
+                    }
+                }
+            } catch (error) {
+                showToast('Error deleting knowledge', 'error');
+            }
+        }
+
+        // Reminder Management
+        async function addReminder() {
+            const message = document.getElementById('reminderMessage').value.trim();
+            const time = document.getElementById('reminderTime').value;
+            
+            if (!message || !time) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            const reminderTime = new Date(time).getTime();
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'addReminder',
+                        message: message,
+                        reminderTime: reminderTime
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        document.getElementById('reminderMessage').value = '';
+                        document.getElementById('reminderTime').value = '';
+                        loadReminders();
+                        showToast('Reminder saved to database! ⏰', 'success');
+                    }
+                }
+            } catch (error) {
+                showToast('Error adding reminder', 'error');
+            }
+        }
+
+        async function loadReminders() {
+            const list = document.getElementById('reminderList');
+            list.innerHTML = '<div class="loading">Loading from database...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}?action=getReminders`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    list.innerHTML = '';
+                    
+                    if (data.success && data.data.length > 0) {
+                        data.data.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'reminder-item';
+                            const date = new Date(item.reminderTime);
+                            div.innerHTML = `
+                                <div>
+                                    <strong>${item.message}</strong><br>
+                                    <small>⏰ ${date.toLocaleString()}</small>
+                                </div>
+                                <button class="btn-delete" onclick="deleteReminder(${item.id})">Delete</button>
+                            `;
+                            list.appendChild(div);
+                        });
+                    } else {
+                        list.innerHTML = '<div class="empty-state"><div class="icon">⏰</div><p>No active reminders</p></div>';
+                    }
+                }
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>Error loading reminders</p></div>';
+            }
+        }
+
+        async function deleteReminder(id) {
+            if (!confirm('Delete this reminder?')) return;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'deleteReminder', id: id })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        loadReminders();
+                        showToast('Reminder deleted', 'success');
+                    }
+                }
+            } catch (error) {
+                showToast('Error deleting reminder', 'error');
+            }
+        }
+
+        async function checkReminders() {
+            try {
+                const response = await fetch(`${API_URL}?action=getReminders`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const now = Date.now();
+                        data.data.forEach(reminder => {
+                            if (reminder.reminderTime <= now && !reminder.triggered) {
+                                showNotification(reminder.message);
+                                // Mark as triggered in database
+                                fetch(API_URL, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ 
+                                        action: 'deleteReminder', 
+                                        id: reminder.id 
+                                    })
+                                });
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking reminders:', error);
+            }
+        }
+
+        function showNotification(message) {
+            // Browser notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('🔔 Reminder', {
+                    body: message,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🔔</text></svg>',
+                    requireInteraction: true
+                });
+            }
+            
+            // In-app notification
+            showToast('🔔 REMINDER: ' + message, 'success');
+            
+            // Add to chat
+            addChatMessage('🔔 REMINDER: ' + message, 'bot');
+        }
+
+        // Stats & Utilities
+        async function updateStats() {
+            document.getElementById('messageCount').textContent = messageCount;
+            document.getElementById('webSearchCount').textContent = webSearchCount;
+            
+            try {
+                const [knowledgeRes, reminderRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getKnowledge`),
+                    fetch(`${API_URL}?action=getReminders`)
+                ]);
+                
+                if (knowledgeRes.ok) {
+                    const data = await knowledgeRes.json();
+                    document.getElementById('knowledgeCount').textContent = 
+                        data.success ? data.data.length : '0';
+                }
+                
+                if (reminderRes.ok) {
+                    const data = await reminderRes.json();
+                    document.getElementById('reminderCount').textContent = 
+                        data.success ? data.data.length : '0';
+                }
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Request notification permission on load
+        if ('Notification' in window && Notification.permission === 'default') {
+            setTimeout(() => {
+                Notification.requestPermission();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
